@@ -203,6 +203,7 @@ bool loadCalibration(CalibrationData &data) {
   data = loaded;
   return true;
 }
+
 bool openNextLogFile() {
   for (uint16_t index = 0; index < 1000; ++index) {
     snprintf(logFileName, sizeof(logFileName), "/LOG%03u.CSV", index);
@@ -233,22 +234,8 @@ bool runCalibration() {
   long shuntAverages[HX_COUNT] = {0, 0, 0};
   showMessage("Calibration", "Leave gauges still", "Capturing zero...");
   delay(3000);
-  if (!captureAverage(ZERO_SAMPLE_COUNT, zeroAverages)) {
-    showMessage("Zero capture fail", "Check HX711 wiring");
-    return false;
-  }
   showMessage("Calibration", "Press shunt buttons", "Then wait...");
   delay(5000);
-  if (!captureAverage(SHUNT_SAMPLE_COUNT, shuntAverages)) {
-    showMessage("Shunt capture fail", "Check modules");
-    return false;
-  }
-  for (uint8_t channel = 0; channel < HX_COUNT; ++channel) {
-    float delta = static_cast<float>(shuntAverages[channel] - zeroAverages[channel]);
-    if (fabs(delta) < 1.0f) {
-      showMessage("Bad calibration", "Delta too small", "Channel " + String(channel + 1));
-      return false;
-    }
     calibration.offset[channel] = static_cast<float>(zeroAverages[channel]);
     calibration.scale[channel] = SHUNT_MICROSTRAIN / delta;
   }
@@ -320,7 +307,7 @@ void setup() {
 //Show init message
   showMessage("UB SAE DAQ Box", "Version: " + String(release)+"."+String(version)+"."+String(subver),
               "Created By: GPWhite", "Initializing...");
-  delay(11500);
+  delay(5000);
 
 //Handle sd card
   if (!initSdCard()) {
